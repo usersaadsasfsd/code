@@ -1,0 +1,100 @@
+{
+  "_id": {
+    "$oid": "697617c95bf1f95a9c25e6df"
+  },
+  "property_name": "4S The Aurrum",
+  "property_type": "apartment",
+  "listing_type": "builder_project",
+  "property_category": "residential",
+  "short_description": "Ultra luxury 3 & 4 BHK residences in Sector 59 Gurugram by 4S Developers with Aravali views, premium amenities and RERA approved",
+  "long_description": "Ultra luxury 3 & 4 BHK residences in Sector 59 Gurugram by 4S Developers with Aravali views, premium amenities and RERA approved\n",
+  "lowest_price": 50500000,
+  "max_price": 81400000,
+  "bedrooms": 3,
+  "bathrooms": 3,
+  "area_sqft": 2407,
+  "parking_type": "covered",
+  "parking_count": 1,
+  "address": "The Aurrum, 4S, near CAPITAL CYBERSPACE, Sector 59, Gurugram",
+  "city": "Gurugram",
+  "state": "Haryana",
+  "postal_code": "122098",
+  "country": "India",
+  "status": "active",
+  "furnished_type": "fully_furnished",
+  "floor_number": "",
+  "total_floors": 43,
+  "possession": "",
+  "possession_type": "under_construction",
+  "possession_date": "2026-01-25",
+  "neighborhood": "",
+  "amenities": [
+    "Swimming pool"
+  ],
+  "facilities": [
+    "bathroom",
+    "bedroom"
+  ],
+  "luxury_amenities": [
+    "Clubhouse",
+    "Swimming Pool"
+  ],
+  "meta_title": "4S The Aurrum - Luxury 3 & 4 BHK Apartments in Sector 59 Gur",
+  "meta_keywords": "4S The Aurrum Gurugram, luxury apartments sector 59",
+  "meta_description": "Ultra luxury 3 & 4 BHK residences in Sector 59 Gurugram by 4S Developers with Aravali views, premium amenities and RERA approved [web:1][web:2][page:1][page:2][",
+  "main_banner": "",
+  "main_thumbnail": "https://ik.imagekit.io/countryroofdata/properties/4s-the-aurrum_sj3EBrFvX.jpg",
+  "multiple_images": [
+    "https://ik.imagekit.io/countryroofdata/properties/4s-the-aurrum_D5gYLuHs-.jpg"
+  ],
+  "floor_plans": [
+    "https://ik.imagekit.io/countryroofdata/properties/4s-the-aurrum_oYFI_HGAd.jpg"
+  ],
+  "master_plan": "",
+  "rera_registered": true,
+  "balconies_count": "",
+  "category": "Trending Projects",
+  "developer_id": "6972f8cc7024c73cd08f9ce2",
+  "developer_name": "4S Developers",
+  "project_status": "under_construction",
+  "target_segment": "luxury",
+  "rera_id": "GGM/849/581/2024/76",
+  "rera_website_link": "https://haryanarera.gov.in",
+  "payment_plan": "possession_linked",
+  "property_size": "2407",
+  "total_towers": 6,
+  "total_units": 500,
+  "total_acreage": 10.5,
+  "google_map_link": "https://maps.app.goo.gl/bSweJ7Q3a3CViS1x7",
+  "main_thumbnail_meta": {
+    "url": "https://ik.imagekit.io/countryroofdata/properties/4s-the-aurrum_sj3EBrFvX.jpg",
+    "name": "4s-the-aurrum_sj3EBrFvX.jpg",
+    "thumbnailUrl": "https://ik.imagekit.io/countryroofdata/tr:n-ik_ml_thumbnail/properties/4s-the-aurrum_sj3EBrFvX.jpg",
+    "size": 422614
+  },
+  "multiple_images_meta": [
+    {
+      "url": "https://ik.imagekit.io/countryroofdata/properties/4s-the-aurrum_D5gYLuHs-.jpg",
+      "name": "4s-the-aurrum_D5gYLuHs-.jpg",
+      "thumbnailUrl": "https://ik.imagekit.io/countryroofdata/tr:n-ik_ml_thumbnail/properties/4s-the-aurrum_D5gYLuHs-.jpg",
+      "size": 422614
+    }
+  ],
+  "floor_plans_meta": [
+    {
+      "url": "https://ik.imagekit.io/countryroofdata/properties/4s-the-aurrum_oYFI_HGAd.jpg",
+      "name": "4s-the-aurrum_oYFI_HGAd.jpg",
+      "thumbnailUrl": "https://ik.imagekit.io/countryroofdata/tr:n-ik_ml_thumbnail/properties/4s-the-aurrum_oYFI_HGAd.jpg",
+      "size": 422614
+    }
+  ],
+  "sales_manager_name": "JItender",
+  "sales_phone": "9876543242",
+  "slug": "4s-the-aurrum",
+  "created_at": {
+    "$date": "2026-01-25T13:16:57.664Z"
+  },
+  "updated_at": {
+    "$date": "2026-01-25T13:16:57.664Z"
+  }
+}

@@ -1,166 +1,30 @@
-# RealEstate CRM - Lead Management System
+# CountryRoof website build
 
-A comprehensive real estate lead management and analytics platform built with Next.js, MongoDB, and modern web technologies.
+*Automatically synced with your [v0.app](https://v0.app) deployments*
 
-## Features
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/zippyyzigs-projects/v0-country-roof-website-build)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/hXZj3zCL6wd)
 
-### 🏠 Lead Management
-- Complete lead lifecycle management
-- Advanced filtering and search capabilities
-- Lead assignment and tracking
-- Activity timeline and notes
-- Import/export functionality
+## Overview
 
-### 📊 Analytics & Reporting
-- Real-time dashboard metrics
-- Lead source analysis
-- Agent performance tracking
-- Conversion funnel visualization
-- Exportable reports
+This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
+Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
 
-### 📅 Calendar Integration
-- **Updated Google Calendar Integration** using Google Identity Services (GIS)
-- Meeting scheduling and management
-- Automated reminders
-- Event synchronization
+## Deployment
 
-### 💬 Communication Tools
-- WhatsApp integration with templates
-- Email communication tracking
-- Activity logging
-- Communication history
+Your project is live at:
 
-### 👥 User Management
-- Role-based access control (Admin/Agent)
-- User permissions and security
-- Profile management
-- Team collaboration
+**[https://vercel.com/zippyyzigs-projects/v0-country-roof-website-build](https://vercel.com/zippyyzigs-projects/v0-country-roof-website-build)**
 
-### 🔔 Notifications
-- Real-time notifications
-- Push notification support
-- Email alerts
-- Task reminders
+## Build your app
 
-## Technology Stack
+Continue building your app on:
 
-- **Frontend**: Next.js 13, React 18, TypeScript
-- **Styling**: Tailwind CSS, shadcn/ui components
-- **Backend**: Next.js API routes, Node.js
-- **Database**: MongoDB with connection pooling
-- **Authentication**: JWT with bcrypt
-- **Calendar**: Google Calendar API with Google Identity Services
-- **Charts**: Recharts
-- **Icons**: Lucide React
+**[https://v0.app/chat/hXZj3zCL6wd](https://v0.app/chat/hXZj3zCL6wd)**
 
-## Google Calendar Integration Update
+## How It Works
 
-This project has been updated to use the **new Google Identity Services (GIS)** library, replacing the deprecated Google Sign-In JavaScript library. The integration now:
-
-- Uses `https://accounts.google.com/gsi/client` for authentication
-- Implements OAuth 2.0 token client for secure access
-- Provides proper token management and revocation
-- Ensures compliance with Google's latest security standards
-
-### Migration Benefits
-- ✅ Complies with Google's latest authentication standards
-- ✅ Enhanced security with proper token management
-- ✅ Future-proof implementation
-- ✅ Better error handling and user experience
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+ 
-- MongoDB database
-- Google Cloud Console project with Calendar API enabled
-
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-\`\`\`env
-# Database Configuration
-MONGODB_URI=mongodb://localhost:27017/realestate_crm
-
-# JWT Authentication
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-
-# Google Calendar Integration
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
-NEXT_PUBLIC_GOOGLE_API_KEY=your-google-api-key
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-\`\`\`
-
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
-   \`\`\`bash
-   npm install
-   \`\`\`
-3. Set up your environment variables
-4. Start the development server:
-   \`\`\`bash
-   npm run dev
-   \`\`\`
-
-### Default Users
-
-The system comes with default users for testing:
-
-- **Admin**: admin@realestate.com / admin123
-- **Agent**: agent@realestate.com / agent123
-
-## Google Calendar Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable the Google Calendar API
-4. Create credentials (OAuth 2.0 Client ID)
-5. Add your domain to authorized origins
-6. Copy the Client ID and API Key to your `.env` file
-
-## Database Schema
-
-The application uses MongoDB with the following collections:
-- `users` - User accounts and authentication
-- `leads` - Lead information and tracking
-- `agents` - Agent profiles (linked to users)
-- `notifications` - System notifications
-- `communication_activities` - Communication logs
-- `calendar_events` - Calendar events and meetings
-- `whatsapp_messages` - WhatsApp communication logs
-
-## Security Features
-
-- JWT-based authentication
-- Role-based access control
-- Password hashing with bcrypt
-- Input validation and sanitization
-- CORS protection
-- Rate limiting (configurable)
-
-## Performance Optimizations
-
-- MongoDB connection pooling
-- Efficient data fetching with proper indexing
-- Client-side caching
-- Optimized bundle splitting
-- Image optimization
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For support and questions, please open an issue in the GitHub repository.
+1. Create and modify your project using [v0.app](https://v0.app)
+2. Deploy your chats from the v0 interface
+3. Changes are automatically pushed to this repository
+4. Vercel deploys the latest version from this repository

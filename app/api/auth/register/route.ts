@@ -1,58 +1,93 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { UsersAPI } from '@/lib/api/users';
+import { MongoClient } from "mongodb"
+import bcrypt from "bcryptjs"
 
-export async function POST(request: NextRequest) {
+const mongoUrl = process.env.MONGODB_URI || ""
+
+async function registerUser(
+  username: string,
+  email: string,
+  password: string,
+  phone_number: string,
+  user_type: "customer" | "agent" = "customer",
+) {
+  if (!mongoUrl) {
+    throw new Error("MongoDB URI not configured")
+  }
+
+  const client = new MongoClient(mongoUrl)
+
   try {
-    const { name, email, password, role, phone, department } = await request.json();
+    await client.connect()
+    const db = client.db("countryroof")
+    const collection = db.collection("users")
 
-    if (!name || !email || !password || !role) {
-      return NextResponse.json(
-        { message: 'Name, email, password, and role are required' },
-        { status: 400 }
-      );
+    // Check if user exists
+    const existingUser = await collection.findOne({
+      $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }],
+    })
+    if (existingUser) {
+      throw new Error("User already exists")
     }
 
-    if (!['admin', 'agent'].includes(role)) {
-      return NextResponse.json(
-        { message: 'Invalid role. Must be admin or agent' },
-        { status: 400 }
-      );
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    // Create user
+    const result = await collection.insertOne({
+      username: username.toLowerCase(),
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      phone_number,
+      user_type,
+      date_joined: new Date(),
+      profile_picture: null,
+    })
+
+    return { id: result.insertedId, username, email, user_type }
+  } finally {
+    await client.close()
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    const { username, email, password, phone_number, user_type } = body
+
+    if (!username || !email || !password || !phone_number) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { message: 'Password must be at least 6 characters long' },
-        { status: 400 }
-      );
+    if (password.length < 8) {
+      return new Response(JSON.stringify({ error: "Password must be at least 8 characters" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
     }
 
-    // Create user in database
-    const newUser = await UsersAPI.createUser({
-      name,
-      email,
-      password,
-      role,
-      phone: phone || undefined,
-      department: department || undefined,
-    });
+    const user = await registerUser(username, email, password, phone_number, user_type || "customer")
 
-    return NextResponse.json({
-      user: newUser,
-      message: 'User created successfully',
-    }, { status: 201 });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Account created successfully",
+        user,
+      }),
+      {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      },
+    )
   } catch (error) {
-    console.error('Registration error:', error);
-    
-    if (error instanceof Error && error.message.includes('already exists')) {
-      return NextResponse.json(
-        { message: 'User with this email already exists' },
-        { status: 409 }
-      );
-    }
-    
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    );
+    const errorMessage = error instanceof Error ? error.message : "Registration failed"
+    const statusCode = errorMessage.includes("already exists") ? 409 : 500
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: statusCode,
+      headers: { "Content-Type": "application/json" },
+    })
   }
 }

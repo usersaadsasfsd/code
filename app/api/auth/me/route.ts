@@ -1,47 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-import { UsersAPI } from '@/lib/api/users';
+import { getCurrentUser } from "@/lib/auth"
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { message: 'No token provided' },
-        { status: 401 }
-      );
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Not authenticated" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      })
     }
 
-    const token = authHeader.substring(7);
-    
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      
-      // Find user by ID in database
-      const user = await UsersAPI.getUserById(decoded.userId);
-      
-      if (!user) {
-        return NextResponse.json(
-          { message: 'User not found' },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json(user);
-    } catch (jwtError) {
-      return NextResponse.json(
-        { message: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    return new Response(
+      JSON.stringify({
+        success: true,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          user_type: user.user_type,
+          profile_picture: user.profile_picture,
+        },
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    )
   } catch (error) {
-    console.error('Get current user error:', error);
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    })
   }
 }

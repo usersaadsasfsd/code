@@ -1,288 +1,77 @@
-"use client"
+import { cookies } from "next/headers"
+import { MongoClient, ObjectId } from "mongodb"
+import bcrypt from "bcryptjs"
 
-import type { User, LoginCredentials, RegisterData, JWTPayload } from "@/types/auth"
+const mongoUrl = process.env.MONGODB_URI || ""
 
-class AuthService {
-  private static instance: AuthService
-  private baseURL = "/api/auth"
+export interface User {
+  _id: ObjectId
+  username: string
+  email: string
+  password?: string
+  phone_number?: string
+  user_type: "customer" | "agent" | "admin"
+  profile_picture?: string
+  date_joined: Date
+  last_login?: Date
+}
 
-  static getInstance(): AuthService {
-    if (!AuthService.instance) {
-      AuthService.instance = new AuthService()
-    }
-    return AuthService.instance
-  }
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get("auth_token")?.value
 
-  // Store token in localStorage
-  private setToken(token: string): void {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("auth_token", token)
-    }
-  }
-
-  // Get token from localStorage
-  getToken(): string | null {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("auth_token")
-    }
-    return null
-  }
-
-  // Remove token from localStorage
-  private removeToken(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("auth_token")
-    }
-  }
-
-  // Decode JWT token
-  private decodeToken(token: string): JWTPayload | null {
-    try {
-      const base64Url = token.split(".")[1]
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join(""),
-      )
-      return JSON.parse(jsonPayload)
-    } catch (error) {
-      console.error("Error decoding token:", error)
-      return null
-    }
-  }
-
-  // Check if token is expired
-  private isTokenExpired(token: string): boolean {
-    const decoded = this.decodeToken(token)
-    if (!decoded) return true
-
-    const currentTime = Date.now() / 1000
-    return decoded.exp < currentTime
-  }
-
-  // Login user
-  async login(credentials: LoginCredentials): Promise<{ user: User; token: string }> {
-    try {
-      const response = await fetch(`${this.baseURL}/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(credentials),
-      })
-
-      if (!response.ok) {
-        let errorMessage = "Login failed"
-        try {
-          const error = await response.json()
-          errorMessage = error.message || errorMessage
-
-          if (response.status === 503) {
-            errorMessage = "Database connection error. Please check if MONGODB_URI is configured correctly."
-          } else if (response.status === 401) {
-            errorMessage = error.message || "Invalid email or password"
-          }
-        } catch (e) {
-          // Silent fail on parsing error
-        }
-
-        throw new Error(errorMessage)
-      }
-
-      const data = await response.json()
-      this.setToken(data.token)
-      return data
-    } catch (error) {
-      console.error("[v0] Login error:", error)
-      throw error
-    }
-  }
-
-  // Register user (admin only)
-  async register(userData: RegisterData): Promise<{ user: User; token: string }> {
-    try {
-      const response = await fetch(`${this.baseURL}/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-        body: JSON.stringify(userData),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Registration failed")
-      }
-
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.error("Registration error:", error)
-      throw error
-    }
-  }
-
-  // Logout user
-  async logout(): Promise<void> {
-    try {
-      await fetch(`${this.baseURL}/logout`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-      })
-    } catch (error) {
-      console.error("Logout error:", error)
-    } finally {
-      this.removeToken()
-    }
-  }
-
-  // Get current user
-  async getCurrentUser(): Promise<User | null> {
-    const token = this.getToken()
-
-    if (!token) {
-      return null
-    }
-
-    if (this.isTokenExpired(token)) {
-      this.removeToken()
-      return null
-    }
-
-    try {
-      const response = await fetch(`${this.baseURL}/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          this.removeToken()
-        }
-        return null
-      }
-
-      const user = await response.json()
-      return user
-    } catch (error) {
-      console.error("[v0] Get current user error:", error)
-      // Don't remove token on network errors - might be temporary
-      return null
-    }
-  }
-
-  // Update user profile
-  async updateProfile(updates: Partial<User>): Promise<User> {
-    try {
-      const response = await fetch(`${this.baseURL}/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-        body: JSON.stringify(updates),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Profile update failed")
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error("Profile update error:", error)
-      throw error
-    }
-  }
-
-  // Change password
-  async changePassword(passwordData: { currentPassword: string; newPassword: string }): Promise<void> {
-    try {
-      const response = await fetch(`${this.baseURL}/change-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-        body: JSON.stringify(passwordData),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Password change failed")
-      }
-    } catch (error) {
-      console.error("Password change error:", error)
-      throw error
-    }
-  }
-
-  // Connect Google account - Updated for new GIS
-  async connectGoogleAccount(): Promise<string> {
-    try {
-      const response = await fetch(`${this.baseURL}/google/connect`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Google connection failed")
-      }
-
-      const data = await response.json()
-
-      // For the new Google Identity Services, we don't return an auth URL
-      // Instead, the client-side code handles the OAuth flow
-      return data.message || "Google connection initiated"
-    } catch (error) {
-      console.error("Google connect error:", error)
-      throw error
-    }
-  }
-
-  // Disconnect Google account - Updated for new GIS
-  async disconnectGoogleAccount(): Promise<void> {
-    try {
-      const response = await fetch(`${this.baseURL}/google/disconnect`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Google disconnection failed")
-      }
-    } catch (error) {
-      console.error("Google disconnect error:", error)
-      throw error
-    }
-  }
-
-  // Check if user is authenticated
-  isAuthenticated(): boolean {
-    const token = this.getToken()
-    return token !== null && !this.isTokenExpired(token)
-  }
-
-  // Get user role from token
-  getUserRole(): "admin" | "agent" | null {
-    const token = this.getToken()
     if (!token) return null
 
-    const decoded = this.decodeToken(token)
-    return decoded?.role || null
+    const decoded = JSON.parse(Buffer.from(token, "base64").toString())
+
+    const client = new MongoClient(mongoUrl)
+    try {
+      await client.connect()
+      const db = client.db("countryroof")
+      const collection = db.collection("users")
+
+      const user = await collection.findOne({
+        _id: new ObjectId(decoded.userId),
+      })
+
+      return user as User | null
+    } finally {
+      await client.close()
+    }
+  } catch {
+    return null
   }
 }
 
-export default AuthService
+export async function requireAuth() {
+  const user = await getCurrentUser()
+  if (!user) {
+    throw new Error("Unauthorized")
+  }
+  return user
+}
+
+export async function requireAdmin() {
+  const user = await requireAuth()
+  if (user.user_type !== "admin") {
+    throw new Error("Forbidden")
+  }
+  return user
+}
+
+export async function requireAgent() {
+  const user = await requireAuth()
+  if (user.user_type !== "agent" && user.user_type !== "admin") {
+    throw new Error("Forbidden")
+  }
+  return user
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10)
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash)
+}
