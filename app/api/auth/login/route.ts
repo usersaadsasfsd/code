@@ -1,102 +1,92 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { MongoClient } from "mongodb"
 import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
-import { UsersAPI } from "@/lib/api/users"
+import { cookies } from "next/headers"
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production"
+const mongoUrl = process.env.MONGODB_URI || ""
 
-if (!process.env.JWT_SECRET) {
-  console.warn("[v0] WARNING: JWT_SECRET not set in environment variables, using default (insecure for production)")
-}
+async function loginUser(email: string, password: string) {
+  if (!mongoUrl) {
+    throw new Error("MongoDB URI not configured")
+  }
 
-export async function POST(request: NextRequest) {
+  const client = new MongoClient(mongoUrl)
+
   try {
-    let body
-    try {
-      body = await request.json()
-    } catch (parseError) {
-      return NextResponse.json({ message: "Invalid request format" }, { status: 400 })
-    }
+    await client.connect()
+    const db = client.db("countryroof")
+    const collection = db.collection("users")
 
-    const { email, password } = body
-
-    if (!email || !password) {
-      return NextResponse.json({ message: "Email and password are required" }, { status: 400 })
-    }
-
-    let user
-    try {
-      user = await UsersAPI.getUserByEmail(email)
-    } catch (dbError) {
-      console.error("[v0] Database error during login")
-      return NextResponse.json({ message: "Database connection error. Please try again." }, { status: 503 })
-    }
-
+    // Find user
+    const user = await collection.findOne({ email: email.toLowerCase() })
     if (!user) {
-      return NextResponse.json({ message: "Invalid credentials" }, { status: 401 })
-    }
-
-    if (!user.password) {
-      console.error("[v0] Login failed: User has no password hash")
-      return NextResponse.json({ message: "Account configuration error. Please contact support." }, { status: 401 })
+      throw new Error("Invalid credentials")
     }
 
     // Verify password
-    let isValidPassword = false
-    try {
-      isValidPassword = await bcrypt.compare(password, user.password)
-    } catch (bcryptError) {
-      console.error("[v0] Password verification error")
-      return NextResponse.json({ message: "Authentication error. Please try again." }, { status: 500 })
-    }
-
+    const isValidPassword = await bcrypt.compare(password, user.password)
     if (!isValidPassword) {
-      return NextResponse.json({ message: "Invalid credentials" }, { status: 401 })
+      throw new Error("Invalid credentials")
     }
 
-    // Check if user is active
-    if (!user.isActive) {
-      return NextResponse.json(
-        { message: "Your account has been deactivated. Please contact support." },
-        { status: 401 },
-      )
-    }
+    // Update last login
+    await collection.updateOne({ _id: user._id }, { $set: { last_login: new Date() } })
 
-    try {
-      await UsersAPI.updateLastLogin(user.id)
-    } catch (updateError) {
-      // Don't fail login if this fails
-    }
+    // Create session token
+    const token = Buffer.from(JSON.stringify({ userId: user._id, email: user.email })).toString("base64")
 
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      JWT_SECRET,
-      { expiresIn: "24h" },
-    )
-
-    // Return user data (without password) and token
-    const { password: _, ...userWithoutPassword } = user
-
-    return NextResponse.json({
-      user: {
-        ...userWithoutPassword,
-        lastLogin: new Date(),
-      },
+    return {
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      user_type: user.user_type,
       token,
+    }
+  } finally {
+    await client.close()
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    const { email, password } = body
+
+    if (!email || !password) {
+      return new Response(JSON.stringify({ error: "Missing email or password" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
+    const user = await loginUser(email, password)
+
+    // Set secure HTTP-only cookie
+    const cookieStore = await cookies()
+    cookieStore.set("auth_token", user.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/",
     })
-  } catch (error) {
-    console.error("[v0] Unexpected login error:", error)
-    return NextResponse.json(
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Logged in successfully",
+        user: { id: user.id, email: user.email, username: user.username, user_type: user.user_type },
+      }),
       {
-        message: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
+        status: 200,
+        headers: { "Content-Type": "application/json" },
       },
-      { status: 500 },
     )
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Login failed"
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    })
   }
 }

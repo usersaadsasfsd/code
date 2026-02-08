@@ -1,18 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from "next/headers"
 
-export async function POST(request: NextRequest) {
-  try {
-    // In a real application, you might want to:
-    // 1. Add the token to a blacklist
-    // 2. Log the logout event
-    // 3. Clear any server-side sessions
-    
-    return NextResponse.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    console.error('Logout error:', error);
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+export async function POST() {
+  const cookieStore = await cookies()
+  cookieStore.delete("auth_token")
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      message: "Logged out successfully",
+    }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    },
+  )
 }
